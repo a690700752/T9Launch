@@ -1,42 +1,35 @@
 package com.moonveil.t9launch;
 
+import android.content.Intent;
+import android.content.pm.PackageManager;
+import android.content.pm.ResolveInfo;
+import android.os.Bundle;
+import android.text.Editable;
+import android.text.InputType;
+import android.text.TextWatcher;
+import android.view.View;
+import android.view.inputmethod.EditorInfo;
+import android.widget.Button;
+import android.widget.EditText;
+import android.widget.GridLayout;
+
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-import android.content.pm.ApplicationInfo;
-import android.content.pm.PackageManager;
-import android.content.pm.ResolveInfo;
-import android.content.Intent;
-import android.os.Bundle;
-import android.text.Editable;
-import android.text.TextWatcher;
-import android.util.Log;
-import android.view.View;
-import android.widget.Button;
-import android.widget.EditText;
-import android.widget.GridLayout;
-import android.view.inputmethod.EditorInfo;
-import android.text.InputType;
-import com.github.promeg.pinyinhelper.Pinyin;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Collections;
-import java.util.Map;
 
 public class MainActivity extends AppCompatActivity {
     private EditText searchBox;
     private AppListAdapter appListAdapter;
     private List<AppInfo> allApps;
-    private AppDatabase appDatabase;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        appDatabase = new AppDatabase(this);
-        
         searchBox = findViewById(R.id.searchBox);
         GridLayout keypadContainer = findViewById(R.id.keypadContainer);
         RecyclerView appList = findViewById(R.id.appList);
@@ -60,10 +53,12 @@ public class MainActivity extends AppCompatActivity {
         // 监听搜索框文本变化
         searchBox.addTextChangedListener(new TextWatcher() {
             @Override
-            public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+            }
 
             @Override
-            public void onTextChanged(CharSequence s, int start, int before, int count) {}
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+            }
 
             @Override
             public void afterTextChanged(Editable s) {
@@ -77,7 +72,7 @@ public class MainActivity extends AppCompatActivity {
             if (child instanceof Button) {
                 Button button = (Button) child;
                 button.setOnClickListener(v -> onKeypadButtonClick(button));
-                
+
                 // 为退格键添加长按事件
                 if (button.getText().toString().contains("⌫")) {
                     button.setOnLongClickListener(v -> {
@@ -100,8 +95,6 @@ public class MainActivity extends AppCompatActivity {
         List<ResolveInfo> resolveInfos = pm.queryIntentActivities(mainIntent, 0);
         allApps = new ArrayList<>();
 
-        Map<String, Integer> clickCounts = appDatabase.getAllClickCounts();
-
         for (ResolveInfo resolveInfo : resolveInfos) {
             String appName = resolveInfo.loadLabel(pm).toString();
             String packageName = resolveInfo.activityInfo.packageName;
@@ -111,20 +104,13 @@ public class MainActivity extends AppCompatActivity {
                 continue;
             }
 
-            // 获取点击次数
-            int clickCount = clickCounts.getOrDefault(packageName, 0);
-
             AppInfo appInfo = new AppInfo(
-                appName,
-                packageName,
-                resolveInfo.loadIcon(pm),
-                clickCount
+                    appName,
+                    packageName,
+                    resolveInfo.loadIcon(pm)
             );
             allApps.add(appInfo);
         }
-
-        // 按点击次数排序
-        Collections.sort(allApps, (a1, a2) -> Integer.compare(a1.getClickCount(), a2.getClickCount()));
 
         appListAdapter.setAppList(allApps);
     }
@@ -132,7 +118,7 @@ public class MainActivity extends AppCompatActivity {
     private void onKeypadButtonClick(Button button) {
         String buttonText = button.getText().toString().split("\n")[0]; // 获取按钮的数字
         String currentText = searchBox.getText().toString();
-        
+
         // 处理特殊按键
         if (buttonText.equals("*")) {
             // 可以用作特殊功能键
@@ -148,10 +134,5 @@ public class MainActivity extends AppCompatActivity {
         // 添加数字到搜索框
         searchBox.setText(currentText + buttonText);
         searchBox.setSelection(searchBox.length()); // 将光标移到末尾
-    }
-
-    // 提供给Adapter使用的方法
-    public void incrementAppClickCount(String packageName) {
-        appDatabase.incrementClickCount(packageName);
     }
 }

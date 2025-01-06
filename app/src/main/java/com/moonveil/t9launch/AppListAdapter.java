@@ -70,10 +70,6 @@ public class AppListAdapter extends RecyclerView.Adapter<AppListAdapter.ViewHold
             Intent launchIntent = v.getContext().getPackageManager()
                     .getLaunchIntentForPackage(app.getPackageName());
             if (launchIntent != null) {
-                // 更新点击次数
-                if (v.getContext() instanceof MainActivity) {
-                    ((MainActivity) v.getContext()).incrementAppClickCount(app.getPackageName());
-                }
                 v.getContext().startActivity(launchIntent);
                 // 销毁T9启动器
                 if (v.getContext() instanceof MainActivity) {
