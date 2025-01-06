@@ -9,15 +9,18 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 public class AppListAdapter extends RecyclerView.Adapter<AppListAdapter.ViewHolder> {
     private List<AppInfo> appList;
     private List<AppInfo> filteredList;
+    private AppLRUCache appLRUCache;
 
-    public AppListAdapter() {
+    public AppListAdapter(AppLRUCache appLRUCache) {
         this.appList = new ArrayList<>();
         this.filteredList = new ArrayList<>();
+        this.appLRUCache = appLRUCache;
     }
 
     public void setAppList(List<AppInfo> appList) {
@@ -67,6 +70,9 @@ public class AppListAdapter extends RecyclerView.Adapter<AppListAdapter.ViewHold
         holder.appIcon.setImageDrawable(app.getIcon());
         
         holder.itemView.setOnClickListener(v -> {
+            // 记录应用使用
+            appLRUCache.recordUsage(app.getPackageName());
+            
             Intent launchIntent = v.getContext().getPackageManager()
                     .getLaunchIntentForPackage(app.getPackageName());
             if (launchIntent != null) {

@@ -18,18 +18,23 @@ import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 
 public class MainActivity extends AppCompatActivity {
     private EditText searchBox;
     private AppListAdapter appListAdapter;
     private List<AppInfo> allApps;
+    private AppLRUCache appLRUCache;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        appLRUCache = new AppLRUCache(this);
+        
         searchBox = findViewById(R.id.searchBox);
         GridLayout keypadContainer = findViewById(R.id.keypadContainer);
         RecyclerView appList = findViewById(R.id.appList);
@@ -40,7 +45,7 @@ public class MainActivity extends AppCompatActivity {
         layoutManager.setReverseLayout(true);  // 反转布局方向
         layoutManager.setOrientation(GridLayoutManager.VERTICAL);  // 设置垂直方向
         appList.setLayoutManager(layoutManager);
-        appListAdapter = new AppListAdapter();
+        appListAdapter = new AppListAdapter(appLRUCache);
         appList.setAdapter(appListAdapter);
 
         // 禁用系统输入法
@@ -111,6 +116,13 @@ public class MainActivity extends AppCompatActivity {
             );
             allApps.add(appInfo);
         }
+
+        // 根据LRU缓存排序
+        Collections.sort(allApps, (a1, a2) -> {
+            long time1 = appLRUCache.getLastUsed(a1.getPackageName());
+            long time2 = appLRUCache.getLastUsed(a2.getPackageName());
+            return Long.compare(time1, time2); // 降序排列，最近使用的在前
+        });
 
         appListAdapter.setAppList(allApps);
     }
