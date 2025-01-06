@@ -12,11 +12,13 @@ public class AppInfo {
     private String packageName;
     private Drawable icon;
     private String t9Key;  // T9数字序列
+    private int clickCount;  // 点击次数
 
-    public AppInfo(String appName, String packageName, Drawable icon) {
+    public AppInfo(String appName, String packageName, Drawable icon, int clickCount) {
         this.appName = appName;
         this.packageName = packageName;
         this.icon = icon;
+        this.clickCount = clickCount;
         this.t9Key = convertToT9Key(appName);
     }
 
@@ -99,4 +101,8 @@ public class AppInfo {
     public String getT9Key() {
         return t9Key;
     }
-} 
+
+    public int getClickCount() {
+        return clickCount;
+    }
+}

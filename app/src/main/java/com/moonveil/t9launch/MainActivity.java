@@ -21,17 +21,21 @@ import android.text.InputType;
 import com.github.promeg.pinyinhelper.Pinyin;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Collections;
 
 public class MainActivity extends AppCompatActivity {
     private EditText searchBox;
     private AppListAdapter appListAdapter;
     private List<AppInfo> allApps;
+    private AppDatabase appDatabase;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        appDatabase = new AppDatabase(this);
+        
         searchBox = findViewById(R.id.searchBox);
         GridLayout keypadContainer = findViewById(R.id.keypadContainer);
         RecyclerView appList = findViewById(R.id.appList);
@@ -104,13 +108,20 @@ public class MainActivity extends AppCompatActivity {
                 continue;
             }
 
+            // 获取点击次数
+            int clickCount = appDatabase.getClickCount(packageName);
+
             AppInfo appInfo = new AppInfo(
                 appName,
                 packageName,
-                resolveInfo.loadIcon(pm)
+                resolveInfo.loadIcon(pm),
+                clickCount
             );
             allApps.add(appInfo);
         }
+
+        // 按点击次数排序
+        Collections.sort(allApps, (a1, a2) -> Integer.compare(a1.getClickCount(), a2.getClickCount()));
 
         appListAdapter.setAppList(allApps);
     }
@@ -134,5 +145,10 @@ public class MainActivity extends AppCompatActivity {
         // 添加数字到搜索框
         searchBox.setText(currentText + buttonText);
         searchBox.setSelection(searchBox.length()); // 将光标移到末尾
+    }
+
+    // 提供给Adapter使用的方法
+    public void incrementAppClickCount(String packageName) {
+        appDatabase.incrementClickCount(packageName);
     }
 }
