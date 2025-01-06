@@ -36,7 +36,8 @@
       "com.github.promeg:tinypinyin",
       "androidx.appcompat:appcompat",
       "androidx.constraintlayout:constraintlayout",
-      "androidx.recyclerview:recyclerview"
+      "androidx.recyclerview:recyclerview",
+      "com.google.android.material:material"
     ]
   }
 }

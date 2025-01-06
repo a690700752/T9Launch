@@ -92,6 +92,13 @@ public class MainActivity extends AppCompatActivity {
         loadAppList();
     }
 
+    @Override
+    protected void onResume() {
+        super.onResume();
+
+        searchBox.setText("");
+    }
+
     private void loadAppList() {
         PackageManager pm = getPackageManager();
         Intent mainIntent = new Intent(Intent.ACTION_MAIN, null);
