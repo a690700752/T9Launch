@@ -1,0 +1,36 @@
+{
+  "name": "T9Launch",
+  "description": "Android T9 应用启动器，支持中英文搜索",
+  "language": "java",
+  "rules": {
+    "ignore_patterns": [
+      "build/",
+      ".gradle/",
+      ".idea/",
+      "*.iml",
+      "local.properties",
+      "*.class",
+      "*.apk",
+      "*.aab"
+    ],
+    "search_paths": [
+      "app/src/main/java/",
+      "app/src/main/res/",
+      "app/src/androidTest/",
+      "app/src/test/"
+    ],
+    "code_patterns": {
+      "class_naming": "^[A-Z][a-zA-Z0-9]*$",
+      "method_naming": "^[a-z][a-zA-Z0-9]*$",
+      "constant_naming": "^[A-Z][A-Z0-9_]*$",
+      "variable_naming": "^[a-z][a-zA-Z0-9]*$"
+    },
+    "max_line_length": 100,
+    "indent_size": 4,
+    "indent_style": "space",
+    "charset": "utf-8",
+    "end_of_line": "lf",
+    "trim_trailing_whitespace": true,
+    "insert_final_newline": true
+  }
+}
