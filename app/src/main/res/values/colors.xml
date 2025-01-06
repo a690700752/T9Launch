@@ -1,20 +1,29 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="purple_200">#FFBB86FC</color>
-    <color name="purple_500">#FF6200EE</color>
-    <color name="purple_700">#FF3700B3</color>
-    <color name="teal_200">#FF03DAC5</color>
-    <color name="teal_700">#FF018786</color>
+    <!-- Material Design 3 配色 -->
+    <color name="primary">#FF006C51</color>
+    <color name="primary_dark">#FF005543</color>
+    <color name="primary_container">#FF7AF8D5</color>
+    <color name="on_primary">#FFFFFFFF</color>
+    <color name="on_primary_container">#FF002117</color>
+    <color name="secondary">#FF4B635B</color>
+    <color name="secondary_container">#FFCDE8DE</color>
+    <color name="on_secondary">#FFFFFFFF</color>
+    <color name="on_secondary_container">#FF082018</color>
+    <color name="surface">#FFFBFDF9</color>
+    <color name="surface_variant">#FFDBE5DE</color>
+    <color name="on_surface">#FF191C1B</color>
+    <color name="on_surface_variant">#FF404944</color>
+    
+    <!-- 基础颜色 -->
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
     
-    <!-- App specific colors -->
-    <color name="background">#FFFFFFFF</color>
-    <color name="text_primary">#DE000000</color>
-    <color name="text_secondary">#99000000</color>
-    
-    <!-- Button colors -->
-    <color name="button_background">#FFFFFF</color>
-    <color name="button_pressed">#EEEEEE</color>
+    <!-- 功能颜色 -->
+    <color name="background">@color/surface</color>
+    <color name="text_primary">@color/on_surface</color>
+    <color name="text_secondary">@color/on_surface_variant</color>
+    <color name="button_background">@color/surface_variant</color>
+    <color name="button_pressed">@color/secondary_container</color>
     <color name="ripple_color">#1F000000</color>
 </resources>

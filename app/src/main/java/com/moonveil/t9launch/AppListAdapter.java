@@ -1,26 +1,18 @@
 package com.moonveil.t9launch;
 
-import android.app.Dialog;
 import android.content.Intent;
-import android.content.pm.LauncherApps;
-import android.content.pm.ShortcutInfo;
-import android.os.UserHandle;
 import android.provider.Settings;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.Window;
 import android.widget.ImageView;
+import android.widget.PopupMenu;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
-import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.google.android.material.button.MaterialButton;
-
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 public class AppListAdapter extends RecyclerView.Adapter<AppListAdapter.ViewHolder> {
@@ -94,88 +86,30 @@ public class AppListAdapter extends RecyclerView.Adapter<AppListAdapter.ViewHold
             }
         });
 
-        // 长按显示应用详情
+        // 长按显示菜单
         holder.itemView.setOnLongClickListener(v -> {
-            showAppDetails(v, app);
+            showPopupMenu(v, app);
             return true;
         });
     }
 
-    private void showAppDetails(View view, AppInfo app) {
-        Dialog dialog = new Dialog(view.getContext());
-        dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
-        dialog.setContentView(R.layout.dialog_app_details);
+    private void showPopupMenu(View view, AppInfo app) {
+        PopupMenu popup = new PopupMenu(view.getContext(), view);
+        popup.getMenuInflater().inflate(R.menu.menu_app_actions, popup.getMenu());
 
-        // 设置应用信息
-        ImageView appIcon = dialog.findViewById(R.id.appIcon);
-        TextView appName = dialog.findViewById(R.id.appName);
-        TextView packageName = dialog.findViewById(R.id.packageName);
-        RecyclerView shortcutsList = dialog.findViewById(R.id.shortcutsList);
-        MaterialButton btnAppInfo = dialog.findViewById(R.id.btnAppInfo);
-        MaterialButton btnClose = dialog.findViewById(R.id.btnClose);
-
-        appIcon.setImageDrawable(app.getIcon());
-        appName.setText(app.getAppName());
-        packageName.setText(app.getPackageName());
-
-        // 获取 LauncherApps 服务
-        LauncherApps launcherApps = view.getContext().getSystemService(LauncherApps.class);
-
-        // 设置快捷方式列表
-        shortcutsList.setLayoutManager(new LinearLayoutManager(view.getContext()));
-        ShortcutAdapter shortcutAdapter = new ShortcutAdapter(launcherApps, shortcut -> {
-            try {
-                // 处理快捷方式点击
-                UserHandle user = android.os.Process.myUserHandle();
-                launcherApps.startShortcut(shortcut, null, null);
-                dialog.dismiss();
-                if (view.getContext() instanceof MainActivity) {
-                    ((MainActivity) view.getContext()).finish();
-                }
-            } catch (Exception e) {
-                e.printStackTrace();
+        // 设置菜单项点击事件
+        popup.setOnMenuItemClickListener(item -> {
+            if (item.getItemId() == R.id.action_app_info) {
+                // 打开应用信息
+                Intent intent = new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
+                intent.setData(android.net.Uri.parse("package:" + app.getPackageName()));
+                view.getContext().startActivity(intent);
+                return true;
             }
-        });
-        shortcutsList.setAdapter(shortcutAdapter);
-
-        // 获取应用的快捷方式
-        try {
-            List<ShortcutInfo> shortcuts = null;
-            if (launcherApps.hasShortcutHostPermission()) {
-                LauncherApps.ShortcutQuery query = new LauncherApps.ShortcutQuery()
-                        .setPackage(app.getPackageName())
-                        .setQueryFlags(
-                                LauncherApps.ShortcutQuery.FLAG_MATCH_PINNED |
-                                LauncherApps.ShortcutQuery.FLAG_MATCH_DYNAMIC |
-                                LauncherApps.ShortcutQuery.FLAG_MATCH_MANIFEST
-                        );
-                shortcuts = launcherApps.getShortcuts(query, android.os.Process.myUserHandle());
-            }
-            
-            if (shortcuts != null && !shortcuts.isEmpty()) {
-                shortcutAdapter.setShortcuts(shortcuts);
-                shortcutsList.setVisibility(View.VISIBLE);
-            } else {
-                shortcutsList.setVisibility(View.GONE);
-                dialog.findViewById(R.id.shortcutsTitle).setVisibility(View.GONE);
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-            shortcutsList.setVisibility(View.GONE);
-            dialog.findViewById(R.id.shortcutsTitle).setVisibility(View.GONE);
-        }
-
-        // 设置按钮点击事件
-        btnAppInfo.setOnClickListener(v -> {
-            Intent intent = new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
-            intent.setData(android.net.Uri.parse("package:" + app.getPackageName()));
-            view.getContext().startActivity(intent);
-            dialog.dismiss();
+            return false;
         });
 
-        btnClose.setOnClickListener(v -> dialog.dismiss());
-
-        dialog.show();
+        popup.show();
     }
 
     @Override

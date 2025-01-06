@@ -2,6 +2,7 @@
   "name": "T9Launch",
   "description": "Android T9 应用启动器，支持中英文搜索",
   "language": "java",
+  "ui_design": "Material Design 3",
   "rules": {
     "ignore_patterns": [
       "build/",

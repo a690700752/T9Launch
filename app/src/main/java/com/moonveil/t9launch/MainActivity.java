@@ -9,21 +9,22 @@ import android.text.InputType;
 import android.text.TextWatcher;
 import android.view.View;
 import android.view.inputmethod.EditorInfo;
-import android.widget.Button;
-import android.widget.EditText;
 import android.widget.GridLayout;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.google.android.material.button.MaterialButton;
+import com.google.android.material.card.MaterialCardView;
+import com.google.android.material.textfield.TextInputEditText;
+
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.List;
 
 public class MainActivity extends AppCompatActivity {
-    private EditText searchBox;
+    private TextInputEditText searchBox;
     private AppListAdapter appListAdapter;
     private List<AppInfo> allApps;
     private AppLRUCache appLRUCache;
@@ -36,7 +37,8 @@ public class MainActivity extends AppCompatActivity {
         appLRUCache = new AppLRUCache(this);
         
         searchBox = findViewById(R.id.searchBox);
-        GridLayout keypadContainer = findViewById(R.id.keypadContainer);
+        MaterialCardView keypadCard = findViewById(R.id.keypadContainer);
+        GridLayout keypadGrid = (GridLayout) keypadCard.getChildAt(0);
         RecyclerView appList = findViewById(R.id.appList);
 
         // 设置RecyclerView为网格布局
@@ -72,10 +74,10 @@ public class MainActivity extends AppCompatActivity {
         });
 
         // 为每个按钮添加点击事件
-        for (int i = 0; i < keypadContainer.getChildCount(); i++) {
-            View child = keypadContainer.getChildAt(i);
-            if (child instanceof Button) {
-                Button button = (Button) child;
+        for (int i = 0; i < keypadGrid.getChildCount(); i++) {
+            View child = keypadGrid.getChildAt(i);
+            if (child instanceof MaterialButton) {
+                MaterialButton button = (MaterialButton) child;
                 button.setOnClickListener(v -> onKeypadButtonClick(button));
 
                 // 为退格键添加长按事件
@@ -95,7 +97,6 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onResume() {
         super.onResume();
-
         searchBox.setText("");
     }
 
@@ -134,7 +135,7 @@ public class MainActivity extends AppCompatActivity {
         appListAdapter.setAppList(allApps);
     }
 
-    private void onKeypadButtonClick(Button button) {
+    private void onKeypadButtonClick(MaterialButton button) {
         String buttonText = button.getText().toString().split("\n")[0]; // 获取按钮的数字
         String currentText = searchBox.getText().toString();
 

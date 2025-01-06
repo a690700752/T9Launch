@@ -2,11 +2,9 @@ package com.moonveil.t9launch;
 
 import android.content.Context;
 import android.content.SharedPreferences;
-import java.util.ArrayList;
+
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
-import java.util.TreeMap;
 
 public class AppLRUCache {
     private static final String PREFS_NAME = "AppLRUCache";

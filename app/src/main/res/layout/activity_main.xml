@@ -16,72 +16,97 @@
         android:paddingStart="4dp"
         android:paddingEnd="4dp"
         android:paddingTop="16dp"
-        app:layout_constraintBottom_toTopOf="@id/searchBox"
+        app:layout_constraintBottom_toTopOf="@id/searchBoxContainer"
         app:layout_constraintTop_toTopOf="parent" />
 
-    <EditText
-        android:id="@+id/searchBox"
+    <com.google.android.material.card.MaterialCardView
+        android:id="@+id/searchBoxContainer"
         android:layout_width="match_parent"
-        android:layout_height="48dp"
+        android:layout_height="wrap_content"
         android:layout_marginStart="16dp"
         android:layout_marginEnd="16dp"
         android:layout_marginBottom="8dp"
-        android:background="@drawable/search_box_background"
-        android:hint="@string/search_hint"
-        android:paddingStart="16dp"
-        android:paddingEnd="16dp"
-        android:textColor="@color/text_primary"
-        android:textColorHint="@color/text_secondary"
-        app:layout_constraintBottom_toTopOf="@id/keypadContainer" />
+        app:cardBackgroundColor="@color/surface"
+        app:cardCornerRadius="28dp"
+        app:cardElevation="2dp"
+        app:strokeColor="@color/surface_variant"
+        app:strokeWidth="1dp"
+        app:layout_constraintBottom_toTopOf="@id/keypadContainer">
 
-    <GridLayout
+        <com.google.android.material.textfield.TextInputEditText
+            android:id="@+id/searchBox"
+            android:layout_width="match_parent"
+            android:layout_height="56dp"
+            android:background="@null"
+            android:hint="@string/search_hint"
+            android:paddingStart="24dp"
+            android:paddingEnd="24dp"
+            android:textColor="@color/text_primary"
+            android:textColorHint="@color/text_secondary"
+            android:textSize="16sp" />
+
+    </com.google.android.material.card.MaterialCardView>
+
+    <com.google.android.material.card.MaterialCardView
         android:id="@+id/keypadContainer"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginStart="8dp"
         android:layout_marginEnd="8dp"
         android:layout_marginBottom="16dp"
-        android:columnCount="3"
-        android:rowCount="4"
+        app:cardBackgroundColor="@color/surface"
+        app:cardCornerRadius="16dp"
+        app:cardElevation="2dp"
+        app:strokeColor="@color/surface_variant"
+        app:strokeWidth="1dp"
         app:layout_constraintBottom_toBottomOf="parent">
 
-        <!-- T9 按键布局 -->
-        <Button
-            style="@style/T9KeyButton"
-            android:text="1\n" />
-        <Button
-            style="@style/T9KeyButton"
-            android:text="2\nABC" />
-        <Button
-            style="@style/T9KeyButton"
-            android:text="3\nDEF" />
-        <Button
-            style="@style/T9KeyButton"
-            android:text="4\nGHI" />
-        <Button
-            style="@style/T9KeyButton"
-            android:text="5\nJKL" />
-        <Button
-            style="@style/T9KeyButton"
-            android:text="6\nMNO" />
-        <Button
-            style="@style/T9KeyButton"
-            android:text="7\nPQRS" />
-        <Button
-            style="@style/T9KeyButton"
-            android:text="8\nTUV" />
-        <Button
-            style="@style/T9KeyButton"
-            android:text="9\nWXYZ" />
-        <Button
-            style="@style/T9KeyButton"
-            android:text="*" />
-        <Button
-            style="@style/T9KeyButton"
-            android:text="0" />
-        <Button
-            style="@style/T9KeyButton"
-            android:text="⌫" />
-    </GridLayout>
+        <GridLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:padding="8dp"
+            android:columnCount="3"
+            android:rowCount="4">
+
+            <!-- T9 按键布局 -->
+            <com.google.android.material.button.MaterialButton
+                style="@style/T9KeyButton"
+                android:text="1\n" />
+            <com.google.android.material.button.MaterialButton
+                style="@style/T9KeyButton"
+                android:text="2\nABC" />
+            <com.google.android.material.button.MaterialButton
+                style="@style/T9KeyButton"
+                android:text="3\nDEF" />
+            <com.google.android.material.button.MaterialButton
+                style="@style/T9KeyButton"
+                android:text="4\nGHI" />
+            <com.google.android.material.button.MaterialButton
+                style="@style/T9KeyButton"
+                android:text="5\nJKL" />
+            <com.google.android.material.button.MaterialButton
+                style="@style/T9KeyButton"
+                android:text="6\nMNO" />
+            <com.google.android.material.button.MaterialButton
+                style="@style/T9KeyButton"
+                android:text="7\nPQRS" />
+            <com.google.android.material.button.MaterialButton
+                style="@style/T9KeyButton"
+                android:text="8\nTUV" />
+            <com.google.android.material.button.MaterialButton
+                style="@style/T9KeyButton"
+                android:text="9\nWXYZ" />
+            <com.google.android.material.button.MaterialButton
+                style="@style/T9KeyButton"
+                android:text="*" />
+            <com.google.android.material.button.MaterialButton
+                style="@style/T9KeyButton"
+                android:text="0" />
+            <com.google.android.material.button.MaterialButton
+                style="@style/T9KeyButton"
+                android:text="⌫" />
+        </GridLayout>
+
+    </com.google.android.material.card.MaterialCardView>
 
 </androidx.constraintlayout.widget.ConstraintLayout>
