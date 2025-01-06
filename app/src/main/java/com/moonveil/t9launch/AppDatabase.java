@@ -6,6 +6,9 @@ import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 
+import java.util.HashMap;
+import java.util.Map;
+
 public class AppDatabase extends SQLiteOpenHelper {
     private static final String DATABASE_NAME = "app_stats.db";
     private static final int DATABASE_VERSION = 1;
@@ -47,6 +50,17 @@ public class AppDatabase extends SQLiteOpenHelper {
         cursor.close();
 
         return clickCount;
+    }
+
+    public Map<String, Integer> getAllClickCounts() {
+        SQLiteDatabase db = this.getReadableDatabase();
+        Map<String, Integer> clickCounts = new HashMap<>();
+        Cursor cursor = db.query(TABLE_NAME, new String[]{COLUMN_PACKAGE_NAME, COLUMN_CLICK_COUNT}, null, null, null, null, null);
+        while (cursor.moveToNext()) {
+            clickCounts.put(cursor.getString(0), cursor.getInt(1));
+        }
+        cursor.close();
+        return clickCounts;
     }
 
     public void incrementClickCount(String packageName) {

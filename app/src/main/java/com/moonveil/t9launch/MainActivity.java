@@ -22,6 +22,7 @@ import com.github.promeg.pinyinhelper.Pinyin;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Collections;
+import java.util.Map;
 
 public class MainActivity extends AppCompatActivity {
     private EditText searchBox;
@@ -99,6 +100,8 @@ public class MainActivity extends AppCompatActivity {
         List<ResolveInfo> resolveInfos = pm.queryIntentActivities(mainIntent, 0);
         allApps = new ArrayList<>();
 
+        Map<String, Integer> clickCounts = appDatabase.getAllClickCounts();
+
         for (ResolveInfo resolveInfo : resolveInfos) {
             String appName = resolveInfo.loadLabel(pm).toString();
             String packageName = resolveInfo.activityInfo.packageName;
@@ -109,7 +112,7 @@ public class MainActivity extends AppCompatActivity {
             }
 
             // 获取点击次数
-            int clickCount = appDatabase.getClickCount(packageName);
+            int clickCount = clickCounts.getOrDefault(packageName, 0);
 
             AppInfo appInfo = new AppInfo(
                 appName,
