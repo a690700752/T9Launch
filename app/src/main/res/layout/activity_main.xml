@@ -1,14 +1,84 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".MainActivity">
+    android:background="@color/background">
 
-    <TextView
-        android:layout_width="wrap_content"
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/appList"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_marginStart="16dp"
+        android:layout_marginTop="16dp"
+        android:layout_marginEnd="16dp"
+        android:layout_marginBottom="8dp"
+        app:layout_constraintBottom_toTopOf="@id/searchBox"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <EditText
+        android:id="@+id/searchBox"
+        android:layout_width="match_parent"
+        android:layout_height="48dp"
+        android:layout_marginStart="16dp"
+        android:layout_marginEnd="16dp"
+        android:layout_marginBottom="8dp"
+        android:background="@drawable/search_box_background"
+        android:hint="@string/search_hint"
+        android:paddingStart="16dp"
+        android:paddingEnd="16dp"
+        android:textColor="@color/text_primary"
+        android:textColorHint="@color/text_secondary"
+        app:layout_constraintBottom_toTopOf="@id/keypadContainer" />
+
+    <GridLayout
+        android:id="@+id/keypadContainer"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Hello World!" />
+        android:layout_marginStart="8dp"
+        android:layout_marginEnd="8dp"
+        android:layout_marginBottom="16dp"
+        android:columnCount="3"
+        android:rowCount="4"
+        app:layout_constraintBottom_toBottomOf="parent">
 
-</LinearLayout>
+        <!-- T9 按键布局 -->
+        <Button
+            style="@style/T9KeyButton"
+            android:text="1\n" />
+        <Button
+            style="@style/T9KeyButton"
+            android:text="2\nABC" />
+        <Button
+            style="@style/T9KeyButton"
+            android:text="3\nDEF" />
+        <Button
+            style="@style/T9KeyButton"
+            android:text="4\nGHI" />
+        <Button
+            style="@style/T9KeyButton"
+            android:text="5\nJKL" />
+        <Button
+            style="@style/T9KeyButton"
+            android:text="6\nMNO" />
+        <Button
+            style="@style/T9KeyButton"
+            android:text="7\nPQRS" />
+        <Button
+            style="@style/T9KeyButton"
+            android:text="8\nTUV" />
+        <Button
+            style="@style/T9KeyButton"
+            android:text="9\nWXYZ" />
+        <Button
+            style="@style/T9KeyButton"
+            android:text="*" />
+        <Button
+            style="@style/T9KeyButton"
+            android:text="0" />
+        <Button
+            style="@style/T9KeyButton"
+            android:text="#" />
+    </GridLayout>
+
+</androidx.constraintlayout.widget.ConstraintLayout>

@@ -1,3 +1,4 @@
 <resources>
     <string name="app_name">T9Launch</string>
+    <string name="search_hint">输入数字搜索应用…</string>
 </resources>
