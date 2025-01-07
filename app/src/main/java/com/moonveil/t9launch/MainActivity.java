@@ -46,6 +46,12 @@ public class MainActivity extends AppCompatActivity {
         GridLayoutManager layoutManager = new GridLayoutManager(this, spanCount);
         layoutManager.setReverseLayout(true);  // 反转布局方向
         layoutManager.setOrientation(GridLayoutManager.VERTICAL);  // 设置垂直方向
+        layoutManager.setSpanSizeLookup(new GridLayoutManager.SpanSizeLookup() {
+            @Override
+            public int getSpanSize(int position) {
+                return 1; // 每个项目占用1个单位宽度
+            }
+        });
         appList.setLayoutManager(layoutManager);
         appListAdapter = new AppListAdapter(appLRUCache);
         appList.setAdapter(appListAdapter);
