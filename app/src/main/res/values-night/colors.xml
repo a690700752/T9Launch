@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Material Design 3 深色模式配色 -->
+    <color name="primary">#FF5BDBB9</color>
+    <color name="primary_dark">#FF4ABFA0</color>
+    <color name="primary_container">#FF004D3A</color>
+    <color name="on_primary">#FF003828</color>
+    <color name="on_primary_container">#FF7AF8D5</color>
+    
+    <color name="secondary">#FFB1CCC3</color>
+    <color name="secondary_container">#FF334B44</color>
+    <color name="on_secondary">#FF1E352E</color>
+    <color name="on_secondary_container">#FFCDE8DE</color>
+    
+    <color name="surface">#FF191C1B</color>
+    <color name="surface_variant">#FF404944</color>
+    <color name="on_surface">#FFE1E3E0</color>
+    <color name="on_surface_variant">#FFBFC9C2</color>
+    
+    <!-- 功能颜色 -->
+    <color name="background">#FF121515</color>
+    <color name="text_primary">@color/on_surface</color>
+    <color name="text_secondary">@color/on_surface_variant</color>
+    <color name="button_background">@color/surface_variant</color>
+    <color name="button_pressed">@color/secondary_container</color>
+    <color name="ripple_color">#33FFFFFF</color>
+</resources> 
