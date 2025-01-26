@@ -80,9 +80,6 @@ public class AppListAdapter extends RecyclerView.Adapter<AppListAdapter.ViewHold
                     .getLaunchIntentForPackage(app.getPackageName());
             if (launchIntent != null) {
                 v.getContext().startActivity(launchIntent);
-                if (v.getContext() instanceof MainActivity) {
-                    ((MainActivity) v.getContext()).finish();
-                }
             }
         });
 

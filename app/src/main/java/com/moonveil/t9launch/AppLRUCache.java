@@ -9,7 +9,7 @@ import java.util.Map;
 public class AppLRUCache {
     private static final String PREFS_NAME = "AppLRUCache";
     private static final String TIMESTAMP_PREFIX = "timestamp_";
-    private static final int MAX_CACHE_SIZE = 12; // 最多保留12个应用的使用记录
+    private static final int MAX_CACHE_SIZE = 20; // 最多保留20个应用的使用记录
     private SharedPreferences prefs;
     private Map<String, Long> cache;
 

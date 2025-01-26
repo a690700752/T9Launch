@@ -95,14 +95,14 @@ public class MainActivity extends AppCompatActivity {
                 }
             }
         }
-
-        // 加载应用列表
-        loadAppList();
     }
 
     @Override
-    protected void onResume() {
-        super.onResume();
+    protected void onStart() {
+        super.onStart();
+        // 加载应用列表
+        loadAppList();
+
         searchBox.setText("");
     }
 
