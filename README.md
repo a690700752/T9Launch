@@ -29,6 +29,10 @@ To build and run:
 2. Open in Android Studio
 3. Build and run on an Android device or emulator
 
+## 中文文档
+
+[中文README](README.zh-CN.md)
+
 ## License
 
 [MIT License](LICENSE)
