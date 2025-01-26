@@ -60,28 +60,4 @@ public class AppLRUCache {
     public long getLastUsed(String packageName) {
         return cache.getOrDefault(packageName, 0L);
     }
-
-    /**
-     * Calculates the nth Fibonacci number using an iterative approach
-     * @param n The position in the Fibonacci sequence (must be >= 0)
-     * @return The Fibonacci number at position n
-     */
-    public static int fibonacci(int n) {
-        if (n < 0) {
-            throw new IllegalArgumentException("Input must be non-negative");
-        }
-        
-        if (n <= 1) {
-            return n;
-        }
-        
-        int prev = 0;
-        int curr = 1;
-        for (int i = 2; i <= n; i++) {
-            int next = prev + curr;
-            prev = curr;
-            curr = next;
-        }
-        return curr;
-    }
 }
