@@ -39,17 +39,21 @@ public class AppListAdapter extends RecyclerView.Adapter<AppListAdapter.ViewHold
     public void filter(String query) {
         filteredList.clear();
         List<AppInfo> tempList = new ArrayList<>();
-        
+        List<AppInfo> startsWithList = new ArrayList<>();
+        List<AppInfo> containsList = new ArrayList<>();
+
         if (query.isEmpty()) {
             tempList.addAll(appList);
         } else {
             for (AppInfo app : appList) {
-                // 使用包含而不是 startsWith ，并且最后在排序，把 startsWith 的放在最前面 ai!
-                // 使用T9键匹配
                 if (app.getT9Key().startsWith(query)) {
-                    tempList.add(app);
+                    startsWithList.add(app);
+                } else if (app.getT9Key().contains(query)) {
+                    containsList.add(app);
                 }
             }
+            tempList.addAll(startsWithList);
+            tempList.addAll(containsList);
         }
         
         // 反转列表顺序以保持从底部开始的显示
