@@ -44,6 +44,7 @@ public class AppListAdapter extends RecyclerView.Adapter<AppListAdapter.ViewHold
             tempList.addAll(appList);
         } else {
             for (AppInfo app : appList) {
+                // 使用包含而不是 startsWith ，并且最后在排序，把 startsWith 的放在最前面 ai!
                 // 使用T9键匹配
                 if (app.getT9Key().startsWith(query)) {
                     tempList.add(app);
