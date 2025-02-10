@@ -40,46 +40,25 @@ public class AppListAdapter extends RecyclerView.Adapter<AppListAdapter.ViewHold
         filteredList.clear();
         List<AppInfo> tempList = new ArrayList<>();
 
-        List<AppInfo> fullPinyinList = new ArrayList<>(); // 全拼匹配
-        List<AppInfo> shortPinyinList = new ArrayList<>(); // 首字母匹配
-        List<AppInfo> startsWithList = new ArrayList<>();  // 开头匹配
-        List<AppInfo> containsList = new ArrayList<>();    // 包含匹配
+        List<AppInfo> startsWithList = new ArrayList<>();
+        List<AppInfo> containsList = new ArrayList<>();
+        List<AppInfo> equalsList = new ArrayList<>();
 
         if (query.isEmpty()) {
             tempList.addAll(appList);
         } else {
             for (AppInfo app : appList) {
-                // 全拼匹配优先级最高
-                if (app.getFullT9Key().equals(query)) {
-                    fullPinyinList.add(app);
-                } 
-                // 首字母完全匹配
-                else if (app.getT9Key().equals(query)) {
-                    shortPinyinList.add(app);
-                }
-                // 开头匹配
-                else if (app.getT9Key().startsWith(query)) {
+                if (app.getT9Key().equals(query)) {
+                    equalsList.add(app);
+                } else if (app.getT9Key().startsWith(query)) {
                     startsWithList.add(app);
-                }
-                // 包含匹配
-                else if (app.getT9Key().contains(query)) {
-                    containsList.add(app);
-                }
-                // 全拼开头匹配（新增）
-                else if (app.getFullT9Key().startsWith(query)) {
-                    startsWithList.add(app);
-                }
-                // 全拼包含匹配（新增）
-                else if (app.getFullT9Key().contains(query)) {
+                } else if (app.getT9Key().contains(query)) {
                     containsList.add(app);
                 }
             }
-
-            // 按优先级合并列表
-            tempList.addAll(fullPinyinList);
-            tempList.addAll(shortPinyinList);
-            tempList.addAll(startsWithList);
             tempList.addAll(containsList);
+            tempList.addAll(startsWithList);
+            tempList.addAll(equalsList);
         }
         
         // 反转列表顺序以保持从底部开始的显示
