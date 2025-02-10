@@ -11,35 +11,42 @@ public class AppInfo {
     private String appName;
     private String packageName;
     private Drawable icon;
-    private String t9Key;  // T9数字序列
+    private String t9Key;  // 首字母T9数字序列
+    private String fullT9Key;  // 全拼T9数字序列
 
     public AppInfo(String appName, String packageName, Drawable icon) {
         this.appName = appName;
         this.packageName = packageName;
         this.icon = icon;
-        this.t9Key = convertToT9Key(appName);
+        this.t9Key = convertToShortT9Key(appName);
+        this.fullT9Key = convertToFullT9Key(appName);
     }
 
-    private String convertToT9Key(String text) {
-        // 先将文本转换为拼音（不带声调）
+    // 拆分首字母转换方法
+    private String convertToShortT9Key(String text) {
         List<String> firstLetters = new ArrayList<>();
         for (String s : Pinyin.toPinyin(text, "|").toLowerCase().split("\\|")) {
             firstLetters.add(s.substring(0, 1));
         }
+        return convertLettersToT9(String.join("", firstLetters));
+    }
 
-        String pinyin = String.join("", firstLetters);
+    // 新增全拼转换方法
+    private String convertToFullT9Key(String text) {
+        String pinyin = Pinyin.toPinyin(text, "").toLowerCase();
+        return convertLettersToT9(pinyin);
+    }
 
+    // 通用字母转T9方法
+    private String convertLettersToT9(String letters) {
         StringBuilder t9Key = new StringBuilder();
-
-        // 将拼音转换为T9键码
-        for (char c : pinyin.toCharArray()) {
+        for (char c : letters.toCharArray()) {
             if (Character.isLetter(c)) {
                 t9Key.append(letterToT9Digit(c));
             } else if (Character.isDigit(c)) {
                 t9Key.append(c);
             }
         }
-
         return t9Key.toString();
     }
 
@@ -98,5 +105,9 @@ public class AppInfo {
 
     public String getT9Key() {
         return t9Key;
+    }
+
+    public String getFullT9Key() {
+        return fullT9Key;
     }
 }
