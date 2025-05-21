@@ -22,12 +22,14 @@ import com.google.android.material.textfield.TextInputEditText;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 
 public class MainActivity extends AppCompatActivity {
     private TextInputEditText searchBox;
     private AppListAdapter appListAdapter;
-    private List<AppInfo> allApps;
+    private List<AppInfo> allApps = new ArrayList<>();
+    private List<Bookmark> allBookmarks = new ArrayList<>();
     private AppLRUCache appLRUCache;
     private WebdavService webdavService;
     private static final String TAG = "MainActivity";
@@ -39,7 +41,7 @@ public class MainActivity extends AppCompatActivity {
 
         appLRUCache = new AppLRUCache(this);
         webdavService = new WebdavService(this);
-        
+
         searchBox = findViewById(R.id.searchBox);
         MaterialCardView keypadCard = findViewById(R.id.keypadContainer);
         GridLayout keypadGrid = (GridLayout) keypadCard.getChildAt(0);
@@ -121,11 +123,14 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onStart() {
         super.onStart();
-        // 加载应用列表
-        loadAppList();
-        // 获取书签
-        fetchBookmarks(); // false for not forcing refresh, use cache if available
+        // It's important to load data and then set/filter the adapter.
+        // Clearing searchBox here will trigger afterTextChanged -> appListAdapter.filter,
+        // so the list should be populated before this.
+        loadAppList(); // This calls refreshCombinedListDisplay
+        fetchBookmarks(); // This also calls refreshCombinedListDisplay
 
+        // Set text to empty to ensure a clean state and trigger initial filter correctly
+        // after data might have been loaded.
         searchBox.setText("");
     }
 
@@ -133,23 +138,24 @@ public class MainActivity extends AppCompatActivity {
         webdavService.fetchAndParseBookmarks(new WebdavService.BookmarksCallback() {
             @Override
             public void onSuccess(List<Bookmark> bookmarks) {
-                // Handle successful fetching of bookmarks
-                // For now, just log them
                 Log.i(TAG, "Successfully fetched " + bookmarks.size() + " bookmarks.");
-                for (Bookmark bookmark : bookmarks) {
-                    Log.d(TAG, "Bookmark: " + bookmark.getName() + " - " + bookmark.getUrl());
-                    // TODO: Integrate bookmarks into the app list or a separate list
-                }
-                // If you need to update UI, ensure it's on the main thread
-                // runOnUiThread(() -> { /* UI updates */ });
+                MainActivity.this.allBookmarks.clear();
+                MainActivity.this.allBookmarks.addAll(bookmarks);
+                // Sort bookmarks alphabetically by name (case-insensitive)
+                Collections.sort(MainActivity.this.allBookmarks, Comparator.comparing(Bookmark::getName, String.CASE_INSENSITIVE_ORDER));
+                
+                runOnUiThread(() -> refreshCombinedListDisplay());
             }
 
             @Override
             public void onFailure(Exception e) {
-                // Handle failure
                 Log.e(TAG, "Failed to fetch bookmarks: " + e.getMessage(), e);
-                // Optionally, show a toast or some other user feedback
-                // runOnUiThread(() -> Toast.makeText(MainActivity.this, "Failed to load bookmarks", Toast.LENGTH_SHORT).show());
+                MainActivity.this.allBookmarks.clear(); // Clear bookmarks on failure
+                runOnUiThread(() -> {
+                    refreshCombinedListDisplay();
+                    // Optionally, show a toast or some other user feedback
+                    // Toast.makeText(MainActivity.this, "Failed to load bookmarks", Toast.LENGTH_SHORT).show();
+                });
             }
         });
     }
@@ -160,7 +166,7 @@ public class MainActivity extends AppCompatActivity {
         mainIntent.addCategory(Intent.CATEGORY_LAUNCHER);
 
         List<ResolveInfo> resolveInfos = pm.queryIntentActivities(mainIntent, 0);
-        allApps = new ArrayList<>();
+        allApps.clear();
 
         for (ResolveInfo resolveInfo : resolveInfos) {
             String appName = resolveInfo.loadLabel(pm).toString();
@@ -179,14 +185,40 @@ public class MainActivity extends AppCompatActivity {
             allApps.add(appInfo);
         }
 
-        // 根据LRU缓存排序
+        // 根据LRU缓存排序 (oldest first, as RecyclerView's reverseLayout will show newest at bottom)
         Collections.sort(allApps, (a1, a2) -> {
             long time1 = appLRUCache.getLastUsed(a1.getPackageName());
             long time2 = appLRUCache.getLastUsed(a2.getPackageName());
-            return Long.compare(time1, time2); // 降序排列，最近使用的在前
+            return Long.compare(time1, time2); 
         });
+        
+        // As loadAppList can be called from onStart, ensure UI updates are on main thread
+        // if this method itself isn't guaranteed to be on UI thread (though loadAppList usually is).
+        // For safety, or if it were a background task:
+        // runOnUiThread(() -> refreshCombinedListDisplay());
+        // However, since onStart() and loadAppList() are on main thread, direct call is fine.
+        refreshCombinedListDisplay();
+    }
 
-        appListAdapter.setAppList(allApps);
+    // This method must be called on the UI thread if it triggers adapter changes.
+    private synchronized void refreshCombinedListDisplay() {
+        List<Object> combinedList = new ArrayList<>();
+        // Apps are sorted by LRU (oldest first in the list)
+        combinedList.addAll(allApps);
+        // Bookmarks are sorted alphabetically (A-Z first in the list)
+        combinedList.addAll(allBookmarks);
+
+        if (appListAdapter != null) {
+            appListAdapter.setAppList(combinedList); // This sets masterList in adapter
+            // Explicitly call filter after updating the master list in the adapter.
+            // This ensures the displayed list (filteredList) is correctly populated based on the new masterList
+            // and current search query.
+            if (searchBox != null && searchBox.getText() != null) {
+                appListAdapter.filter(searchBox.getText().toString());
+            } else {
+                appListAdapter.filter(""); // Filter with empty string if searchBox is null
+            }
+        }
     }
 
     private void onKeypadButtonClick(MaterialButton button) {

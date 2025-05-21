@@ -1,6 +1,9 @@
 package com.moonveil.t9launch;
 
+import android.content.Context;
 import android.content.Intent;
+import android.graphics.drawable.Drawable;
+import android.net.Uri;
 import android.provider.Settings;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -16,52 +19,73 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class AppListAdapter extends RecyclerView.Adapter<AppListAdapter.ViewHolder> {
-    private List<AppInfo> appList;
-    private List<AppInfo> filteredList;
+    private List<Object> masterList; // Can hold AppInfo or Bookmark objects
+    private List<Object> filteredList; // Can hold AppInfo or Bookmark objects
     private AppLRUCache appLRUCache;
 
     public AppListAdapter(AppLRUCache appLRUCache) {
-        this.appList = new ArrayList<>();
+        this.masterList = new ArrayList<>();
         this.filteredList = new ArrayList<>();
         this.appLRUCache = appLRUCache;
     }
 
-    public void setAppList(List<AppInfo> appList) {
-        this.appList = new ArrayList<>(appList);
-        this.filteredList.clear();
-        // 反转列表顺序以保持从底部开始的显示
-        for (int i = appList.size() - 1; i >= 0; i--) {
-            this.filteredList.add(appList.get(i));
-        }
-        notifyDataSetChanged();
+    public void setAppList(List<Object> newList) {
+        this.masterList = new ArrayList<>(newList); // Store the combined, sorted list
+        // Initial filter will be called by text watcher or explicitly
+        // For now, just apply the current filter (which might be empty)
+        // This will be handled by MainActivity calling filter() after setAppList or text change
+        // To ensure initial display is correct if searchBox is empty:
+        filter(getCurrentQuery()); // Assuming a method to get current query or pass it
     }
+    
+    // Helper to get current query, replace with actual way if searchBox is accessible
+    // or ensure filter is called from MainActivity after setAppList
+    private String getCurrentQuery() {
+        // This is a placeholder. MainActivity should call filter.
+        // For example, if MainActivity.searchBox is available:
+        // return MainActivity.searchBox.getText().toString();
+        return ""; // Default to empty if not directly accessible
+    }
+
 
     public void filter(String query) {
         filteredList.clear();
-        List<AppInfo> tempList = new ArrayList<>();
+        List<Object> tempList = new ArrayList<>();
 
-        List<AppInfo> startsWithList = new ArrayList<>();
-        List<AppInfo> containsList = new ArrayList<>();
-        List<AppInfo> equalsList = new ArrayList<>();
+        List<Object> startsWithList = new ArrayList<>();
+        List<Object> containsList = new ArrayList<>();
+        List<Object> equalsList = new ArrayList<>();
 
         if (query.isEmpty()) {
-            tempList.addAll(appList);
+            tempList.addAll(masterList); // Use masterList for empty query
         } else {
-            for (AppInfo app : appList) {
-                if (app.getT9Key().equals(query)) {
-                    equalsList.add(app);
-                } else if (app.getT9Key().startsWith(query)) {
-                    startsWithList.add(app);
-                } else if (app.getT9Key().contains(query)) {
-                    containsList.add(app);
+            for (Object item : masterList) { // Iterate over masterList
+                String t9Key = null;
+                if (item instanceof AppInfo) {
+                    t9Key = ((AppInfo) item).getT9Key();
+                } else if (item instanceof Bookmark) {
+                    t9Key = ((Bookmark) item).getT9Key();
+                }
+
+                if (t9Key != null) {
+                    if (t9Key.equals(query)) {
+                        equalsList.add(item);
+                    } else if (t9Key.startsWith(query)) {
+                        startsWithList.add(item);
+                    } else if (t9Key.contains(query)) {
+                        containsList.add(item);
+                    }
                 }
             }
+            // Order: Contains, then StartsWith, then Equals.
+            // Adapter reverses this, so Equals will be at the bottom (highest priority).
             tempList.addAll(containsList);
             tempList.addAll(startsWithList);
             tempList.addAll(equalsList);
         }
         
-        // 反转列表顺序以保持从底部开始的显示
+        // Reverse the tempList to achieve bottom-up display (newest/highest priority at bottom)
+        // when used with RecyclerView's reverseLayout=true.
         for (int i = tempList.size() - 1; i >= 0; i--) {
             filteredList.add(tempList.get(i));
         }
@@ -78,29 +102,47 @@ public class AppListAdapter extends RecyclerView.Adapter<AppListAdapter.ViewHold
 
     @Override
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
-        AppInfo app = filteredList.get(position);
-        holder.appName.setText(app.getAppName());
-        holder.appIcon.setImageDrawable(app.getIcon());
-        
-        // 点击启动应用
-        holder.itemView.setOnClickListener(v -> {
-            appLRUCache.recordUsage(app.getPackageName());
-            
-            Intent launchIntent = v.getContext().getPackageManager()
-                    .getLaunchIntentForPackage(app.getPackageName());
-            if (launchIntent != null) {
-                v.getContext().startActivity(launchIntent);
-            }
-        });
+        Object item = filteredList.get(position);
+        Context context = holder.itemView.getContext();
 
-        // 长按显示菜单
-        holder.itemView.setOnLongClickListener(v -> {
-            showPopupMenu(v, app);
-            return true;
-        });
+        if (item instanceof AppInfo) {
+            AppInfo app = (AppInfo) item;
+            holder.appName.setText(app.getAppName());
+            holder.appIcon.setImageDrawable(app.getIcon());
+
+            holder.itemView.setOnClickListener(v -> {
+                appLRUCache.recordUsage(app.getPackageName());
+                Intent launchIntent = context.getPackageManager()
+                        .getLaunchIntentForPackage(app.getPackageName());
+                if (launchIntent != null) {
+                    context.startActivity(launchIntent);
+                }
+            });
+
+            holder.itemView.setOnLongClickListener(v -> {
+                showPopupMenuForApp(v, app);
+                return true;
+            });
+        } else if (item instanceof Bookmark) {
+            Bookmark bookmark = (Bookmark) item;
+            holder.appName.setText(bookmark.getName());
+            // TODO: Consider adding a specific bookmark icon in res/drawable
+            holder.appIcon.setImageResource(android.R.drawable.ic_menu_compass); // Placeholder icon
+
+            holder.itemView.setOnClickListener(v -> {
+                Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(bookmark.getUrl()));
+                // Add FLAG_ACTIVITY_NEW_TASK if starting from a non-Activity context,
+                // but here, context is from ViewHolder, usually fine.
+                context.startActivity(browserIntent);
+            });
+
+            // Long-click for bookmarks: currently no action.
+            // Implement showPopupMenuForBookmark(v, bookmark) if needed.
+            holder.itemView.setOnLongClickListener(null);
+        }
     }
 
-    private void showPopupMenu(View view, AppInfo app) {
+    private void showPopupMenuForApp(View view, AppInfo app) {
         PopupMenu popup = new PopupMenu(view.getContext(), view);
         popup.getMenuInflater().inflate(R.menu.menu_app_actions, popup.getMenu());
 
