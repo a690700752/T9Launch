@@ -101,15 +101,6 @@ public class MainActivity extends AppCompatActivity {
                 }
                 // 为数字 "1" 键添加长按事件以打开设置
                 if (button.getText().toString().startsWith("1")) {
-                    String originalText = button.getText().toString();
-                    String[] lines = originalText.split("\n", 2);
-                    String newFirstLine = lines[0] + " ⚙"; // 在数字 "1" 后添加图标
-                    if (lines.length > 1) {
-                        button.setText(newFirstLine + "\n" + lines[1]);
-                    } else {
-                        button.setText(newFirstLine);
-                    }
-
                     button.setOnLongClickListener(v -> {
                         Intent intent = new Intent(MainActivity.this, SettingsActivity.class);
                         startActivity(intent);
@@ -141,8 +132,7 @@ public class MainActivity extends AppCompatActivity {
                 Log.i(TAG, "Successfully fetched " + bookmarks.size() + " bookmarks.");
                 MainActivity.this.allBookmarks.clear();
                 MainActivity.this.allBookmarks.addAll(bookmarks);
-                // Sort bookmarks alphabetically by name (case-insensitive)
-                Collections.sort(MainActivity.this.allBookmarks, Comparator.comparing(Bookmark::getName, String.CASE_INSENSITIVE_ORDER));
+                // Sorting will be done in refreshCombinedListDisplay for the combined list
                 
                 runOnUiThread(() -> refreshCombinedListDisplay());
             }
@@ -185,12 +175,7 @@ public class MainActivity extends AppCompatActivity {
             allApps.add(appInfo);
         }
 
-        // 根据LRU缓存排序 (oldest first, as RecyclerView's reverseLayout will show newest at bottom)
-        Collections.sort(allApps, (a1, a2) -> {
-            long time1 = appLRUCache.getLastUsed(a1.getPackageName());
-            long time2 = appLRUCache.getLastUsed(a2.getPackageName());
-            return Long.compare(time1, time2); 
-        });
+        // Sorting will be done in refreshCombinedListDisplay for the combined list
         
         // As loadAppList can be called from onStart, ensure UI updates are on main thread
         // if this method itself isn't guaranteed to be on UI thread (though loadAppList usually is).
@@ -203,10 +188,78 @@ public class MainActivity extends AppCompatActivity {
     // This method must be called on the UI thread if it triggers adapter changes.
     private synchronized void refreshCombinedListDisplay() {
         List<Object> combinedList = new ArrayList<>();
-        // Apps are sorted by LRU (oldest first in the list)
         combinedList.addAll(allApps);
-        // Bookmarks are sorted alphabetically (A-Z first in the list)
         combinedList.addAll(allBookmarks);
+
+        // Sort the combined list.
+        // Given RecyclerView's reverseLayout=true, items that are "greater" in the sort
+        // order (come later in the sorted list) will appear at the top of the screen.
+        // Desired display order:
+        // 1. Used apps (most recent first on screen).
+        // 2. Then, unused apps and bookmarks (alphabetically A-Z on screen).
+        Collections.sort(combinedList, (o1, o2) -> {
+            long time1 = 0;
+            String name1 = "";
+            boolean o1HasRecentUsage = false;
+
+            if (o1 instanceof AppInfo) {
+                AppInfo app1 = (AppInfo) o1;
+                name1 = app1.getAppName();
+                time1 = appLRUCache.getLastUsed(app1.getPackageName());
+            } else if (o1 instanceof Bookmark) {
+                Bookmark bookmark1 = (Bookmark) o1;
+                name1 = bookmark1.getName();
+                // For bookmarks, use their URL as the unique identifier in the LRU cache.
+                // Ensure recordUsage(bookmark.getUrl()) is called when a bookmark is opened.
+                time1 = appLRUCache.getLastUsed(bookmark1.getUrl());
+            }
+            if (time1 > 0) {
+                o1HasRecentUsage = true;
+            }
+
+            long time2 = 0;
+            String name2 = "";
+            boolean o2HasRecentUsage = false;
+
+            if (o2 instanceof AppInfo) {
+                AppInfo app2 = (AppInfo) o2;
+                name2 = app2.getAppName();
+                time2 = appLRUCache.getLastUsed(app2.getPackageName());
+            } else if (o2 instanceof Bookmark) {
+                Bookmark bookmark2 = (Bookmark) o2;
+                name2 = bookmark2.getName();
+                time2 = appLRUCache.getLastUsed(bookmark2.getUrl());
+            }
+            if (time2 > 0) {
+                o2HasRecentUsage = true;
+            }
+
+            // Rule 1: Items with recent usage are "greater" than non-recent items.
+            // "Greater" items come later in the sorted list, appearing at the top with reverseLayout=true.
+            if (o1HasRecentUsage && !o2HasRecentUsage) {
+                return 1; // o1 is "greater"
+            }
+            if (!o1HasRecentUsage && o2HasRecentUsage) {
+                return -1; // o1 is "smaller"
+            }
+
+            // Rule 2: If both items have recent usage, sort by time.
+            // Long.compare sorts in ascending order (older timestamps first in the list).
+            // With reverseLayout=true, newer items (larger timestamps) appear at the top.
+            if (o1HasRecentUsage && o2HasRecentUsage) {
+                int timeCompare = Long.compare(time1, time2);
+                if (timeCompare != 0) {
+                    return timeCompare;
+                }
+                // Fallback to name sort if times are identical.
+                // Ascending name sort (A-Z in list) means Z appears at top of this equally-timed group.
+                return name1.compareToIgnoreCase(name2);
+            }
+
+            // Rule 3: If neither item has recent usage, sort by name.
+            // Ascending name sort (A-Z in list) means Z appears at top of this non-recent group.
+            return name1.compareToIgnoreCase(name2);
+        });
 
         if (appListAdapter != null) {
             appListAdapter.setAppList(combinedList); // This sets masterList in adapter

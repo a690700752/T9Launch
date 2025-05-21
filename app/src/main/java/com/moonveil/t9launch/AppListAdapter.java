@@ -130,6 +130,7 @@ public class AppListAdapter extends RecyclerView.Adapter<AppListAdapter.ViewHold
             holder.appIcon.setImageResource(android.R.drawable.ic_menu_compass); // Placeholder icon
 
             holder.itemView.setOnClickListener(v -> {
+                appLRUCache.recordUsage(bookmark.getUrl());
                 Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(bookmark.getUrl()));
                 // Add FLAG_ACTIVITY_NEW_TASK if starting from a non-Activity context,
                 // but here, context is from ViewHolder, usually fine.
