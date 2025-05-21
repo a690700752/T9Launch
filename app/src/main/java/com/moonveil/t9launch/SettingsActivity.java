@@ -7,10 +7,12 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
+import com.google.android.material.switchmaterial.SwitchMaterial;
 
 public class SettingsActivity extends AppCompatActivity {
 
     private EditText etWebdavUrl, etWebdavUsername, etWebdavPassword, etBookmarkFilename;
+    private SwitchMaterial switchEnableBookmarkSearch;
     private Button btnSaveSettings;
 
     public static final String PREFS_SETTINGS_NAME = "T9LaunchSettings";
@@ -18,6 +20,7 @@ public class SettingsActivity extends AppCompatActivity {
     public static final String KEY_WEBDAV_USERNAME = "webdav_username";
     public static final String KEY_WEBDAV_PASSWORD = "webdav_password";
     public static final String KEY_BOOKMARK_FILENAME = "bookmark_filename";
+    public static final String KEY_ENABLE_BOOKMARK_SEARCH = "enable_bookmark_search";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -32,6 +35,7 @@ public class SettingsActivity extends AppCompatActivity {
         etWebdavUsername = findViewById(R.id.et_webdav_username);
         etWebdavPassword = findViewById(R.id.et_webdav_password);
         etBookmarkFilename = findViewById(R.id.et_bookmark_filename);
+        switchEnableBookmarkSearch = findViewById(R.id.switch_enable_bookmark_search);
         btnSaveSettings = findViewById(R.id.btn_save_settings);
 
         loadSettings();
@@ -45,6 +49,7 @@ public class SettingsActivity extends AppCompatActivity {
         etWebdavUsername.setText(prefs.getString(KEY_WEBDAV_USERNAME, ""));
         etWebdavPassword.setText(prefs.getString(KEY_WEBDAV_PASSWORD, ""));
         etBookmarkFilename.setText(prefs.getString(KEY_BOOKMARK_FILENAME, "bookmarks.html"));
+        switchEnableBookmarkSearch.setChecked(prefs.getBoolean(KEY_ENABLE_BOOKMARK_SEARCH, true)); // Default to true
     }
 
     private void saveSettings() {
@@ -53,6 +58,7 @@ public class SettingsActivity extends AppCompatActivity {
         editor.putString(KEY_WEBDAV_USERNAME, etWebdavUsername.getText().toString().trim());
         editor.putString(KEY_WEBDAV_PASSWORD, etWebdavPassword.getText().toString()); // 密码通常不 trim
         editor.putString(KEY_BOOKMARK_FILENAME, etBookmarkFilename.getText().toString().trim());
+        editor.putBoolean(KEY_ENABLE_BOOKMARK_SEARCH, switchEnableBookmarkSearch.isChecked());
         editor.apply();
         Toast.makeText(this, "设置已保存", Toast.LENGTH_SHORT).show();
         finish(); // 保存后关闭设置页面

@@ -1,6 +1,8 @@
 package com.moonveil.t9launch;
 
+import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
 import android.os.Bundle;
@@ -126,6 +128,16 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void fetchBookmarks() {
+        SharedPreferences settingsPrefs = getSharedPreferences(SettingsActivity.PREFS_SETTINGS_NAME, Context.MODE_PRIVATE);
+        boolean bookmarksEnabled = settingsPrefs.getBoolean(SettingsActivity.KEY_ENABLE_BOOKMARK_SEARCH, true);
+
+        if (!bookmarksEnabled) {
+            Log.i(TAG, "Bookmark search is disabled in settings.");
+            MainActivity.this.allBookmarks.clear();
+            runOnUiThread(() -> refreshCombinedListDisplay());
+            return;
+        }
+
         webdavService.fetchAndParseBookmarks(new WebdavService.BookmarksCallback() {
             @Override
             public void onSuccess(List<Bookmark> bookmarks) {
