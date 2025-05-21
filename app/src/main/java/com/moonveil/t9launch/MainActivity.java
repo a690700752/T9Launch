@@ -93,6 +93,23 @@ public class MainActivity extends AppCompatActivity {
                         return true;
                     });
                 }
+                // 为数字 "1" 键添加长按事件以打开设置
+                if (button.getText().toString().startsWith("1")) {
+                    String originalText = button.getText().toString();
+                    String[] lines = originalText.split("\n", 2);
+                    String newFirstLine = lines[0] + " ⚙"; // 在数字 "1" 后添加图标
+                    if (lines.length > 1) {
+                        button.setText(newFirstLine + "\n" + lines[1]);
+                    } else {
+                        button.setText(newFirstLine);
+                    }
+
+                    button.setOnLongClickListener(v -> {
+                        Intent intent = new Intent(MainActivity.this, SettingsActivity.class);
+                        startActivity(intent);
+                        return true; // 表示事件已处理
+                    });
+                }
             }
         }
     }
@@ -142,14 +159,20 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void onKeypadButtonClick(MaterialButton button) {
-        String buttonText = button.getText().toString().split("\n")[0]; // 获取按钮的数字
+        String buttonLabel = button.getText().toString().split("\n")[0]; // 获取按钮的标签, e.g., "1" or "1 ⚙"
         String currentText = searchBox.getText().toString();
+        String buttonValue = buttonLabel;
+
+        // 如果按钮标签以设置图标结尾，则实际值是去除图标的部分
+        if (buttonLabel.endsWith(" ⚙")) {
+            buttonValue = buttonLabel.substring(0, buttonLabel.length() - " ⚙".length()).trim();
+        }
 
         // 处理特殊按键
-        if (buttonText.equals("*")) {
+        if (buttonValue.equals("*")) { // 使用 buttonValue 进行判断
             // 可以用作特殊功能键
             return;
-        } else if (buttonText.equals("⌫")) {
+        } else if (buttonLabel.equals("⌫")) { // 退格键的标签没有改变
             // 退格键
             if (currentText.length() > 0) {
                 searchBox.setText(currentText.substring(0, currentText.length() - 1));
@@ -158,7 +181,7 @@ public class MainActivity extends AppCompatActivity {
         }
 
         // 添加数字到搜索框
-        searchBox.setText(currentText + buttonText);
+        searchBox.setText(currentText + buttonValue); // 使用 buttonValue
         searchBox.setSelection(searchBox.length()); // 将光标移到末尾
     }
 }

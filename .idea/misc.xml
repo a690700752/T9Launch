@@ -5,6 +5,7 @@
       <map>
         <entry key="app/src/main/res/drawable/search_box_background.xml" value="0.1125" />
         <entry key="app/src/main/res/layout/activity_main.xml" value="0.1" />
+        <entry key="app/src/main/res/layout/activity_settings.xml" value="0.10052083333333334" />
         <entry key="app/src/main/res/layout/dialog_app_details.xml" value="0.10104166666666667" />
       </map>
     </option>
