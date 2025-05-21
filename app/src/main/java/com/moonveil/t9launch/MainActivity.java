@@ -124,13 +124,13 @@ public class MainActivity extends AppCompatActivity {
         // 加载应用列表
         loadAppList();
         // 获取书签
-        fetchBookmarks(false); // false for not forcing refresh, use cache if available
+        fetchBookmarks(); // false for not forcing refresh, use cache if available
 
         searchBox.setText("");
     }
 
-    private void fetchBookmarks(boolean forceRefresh) {
-        webdavService.fetchAndParseBookmarks(forceRefresh, new WebdavService.BookmarksCallback() {
+    private void fetchBookmarks() {
+        webdavService.fetchAndParseBookmarks(new WebdavService.BookmarksCallback() {
             @Override
             public void onSuccess(List<Bookmark> bookmarks) {
                 // Handle successful fetching of bookmarks

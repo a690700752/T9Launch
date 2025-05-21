@@ -50,16 +50,18 @@ public class WebdavService {
         this.xbelParser = new XbelBookmarkParser();
     }
 
-    public void fetchAndParseBookmarks(boolean forceRefresh, BookmarksCallback callback) {
-        if (!forceRefresh) {
-            List<Bookmark> cachedBookmarks = loadBookmarksFromCache();
-            if (cachedBookmarks != null && !cachedBookmarks.isEmpty()) {
-                // console.warn("从缓存加载书签");
-                callback.onSuccess(cachedBookmarks);
-                return;
-            }
+    public void fetchAndParseBookmarks(BookmarksCallback callback) {
+        List<Bookmark> cachedBookmarks = loadBookmarksFromCache();
+        boolean initialCallbackDone = false;
+
+        if (cachedBookmarks != null && !cachedBookmarks.isEmpty()) {
+            // console.warn("从缓存加载书签 (立即返回)");
+            callback.onSuccess(cachedBookmarks);
+            initialCallbackDone = true;
+            // We don't return here; proceed to update cache in the background.
         }
 
+        // Continue to fetch from network to update cache
         SharedPreferences prefs = context.getSharedPreferences(SettingsActivity.PREFS_SETTINGS_NAME, Context.MODE_PRIVATE);
         String webdavUrl = prefs.getString(SettingsActivity.KEY_WEBDAV_URL, null);
         String username = prefs.getString(SettingsActivity.KEY_WEBDAV_USERNAME, null);
@@ -67,8 +69,13 @@ public class WebdavService {
         String bookmarkFilename = prefs.getString(SettingsActivity.KEY_BOOKMARK_FILENAME, null);
 
         if (webdavUrl == null || bookmarkFilename == null) {
-            callback.onFailure(new IOException("WebDAV URL 或文件名未配置"));
-            return;
+            if (!initialCallbackDone) { // Only fail if nothing was returned via cache yet
+                callback.onFailure(new IOException("WebDAV URL 或文件名未配置"));
+            } else {
+                // Optional: Log that background update is skipped due to missing config
+                // android.util.Log.w("WebdavService", "WebDAV URL or filename not configured, skipping background update.");
+            }
+            return; // Stop further processing for network request
         }
 
         if (!webdavUrl.endsWith("/")) {
@@ -86,18 +93,15 @@ public class WebdavService {
 
         Request request = requestBuilder.build();
 
+        final boolean effectivelyFinalInitialCallbackDone = initialCallbackDone;
         httpClient.newCall(request).enqueue(new Callback() {
             @Override
             public void onFailure(Call call, IOException e) {
-                // console.warn("WebDAV 请求失败 (OkHttp onFailure): " + e.getMessage());
-                if (!forceRefresh) {
-                    List<Bookmark> cachedBookmarks = loadBookmarksFromCache();
-                    if (cachedBookmarks != null && !cachedBookmarks.isEmpty()) {
-                        callback.onSuccess(cachedBookmarks);
-                        return;
-                    }
+                // console.warn("后台更新 - WebDAV 请求失败: " + e.getMessage());
+                if (!effectivelyFinalInitialCallbackDone) { // If cache was empty and network failed
+                    callback.onFailure(e);
                 }
-                callback.onFailure(e);
+                // Otherwise, the user already has cached data; this failure is for the background update.
             }
 
             @Override
@@ -120,31 +124,27 @@ public class WebdavService {
                         } else {
                             parser = htmlParser; // 默认为 HTML 解析器
                         }
-                        bookmarksResult = parser.parse(inputStream, fullUrl);
-                        saveBookmarksToCache(bookmarksResult);
-                        // console.warn("从网络加载书签并缓存: " + bookmarkFilename);
-                        callback.onSuccess(bookmarksResult);
-                    } catch (Exception parsingException) { // 捕获解析或流处理中的异常
-                        // console.warn("解析书签时出错: " + parsingException.getMessage());
-                        if (!forceRefresh) {
-                            List<Bookmark> cachedBookmarks = loadBookmarksFromCache();
-                            if (cachedBookmarks != null && !cachedBookmarks.isEmpty()) {
-                                callback.onSuccess(cachedBookmarks);
-                                return;
-                            }
+                        List<Bookmark> networkBookmarks = parser.parse(inputStream, fullUrl);
+                        saveBookmarksToCache(networkBookmarks); // Update cache for next time
+                        // console.warn("后台更新 - 从网络加载书签并更新缓存: " + bookmarkFilename);
+
+                        if (!effectivelyFinalInitialCallbackDone) { // If cache wasn't returned initially (e.g., it was empty)
+                            callback.onSuccess(networkBookmarks);
                         }
-                        callback.onFailure(parsingException);
+                        // If cache WAS returned, we don't call onSuccess again for the background update.
+                    } catch (Exception parsingException) { // 捕获解析或流处理中的异常
+                        // console.warn("后台更新 - 解析书签时出错: " + parsingException.getMessage());
+                        if (!effectivelyFinalInitialCallbackDone) {
+                            callback.onFailure(parsingException);
+                        }
+                        // If initial callback was done, this parsing error is for the background update.
                     }
                 } catch (IOException networkOrSetupException) { // 捕获响应处理本身的异常
-                    // console.warn("网络或响应处理错误: " + networkOrSetupException.getMessage());
-                     if (!forceRefresh) {
-                        List<Bookmark> cachedBookmarks = loadBookmarksFromCache();
-                        if (cachedBookmarks != null && !cachedBookmarks.isEmpty()) {
-                            callback.onSuccess(cachedBookmarks);
-                            return;
-                        }
+                    // console.warn("后台更新 - 网络或响应处理错误: " + networkOrSetupException.getMessage());
+                    if (!effectivelyFinalInitialCallbackDone) {
+                        callback.onFailure(networkOrSetupException);
                     }
-                    callback.onFailure(networkOrSetupException);
+                    // If initial callback was done, this error is for the background update.
                 } finally {
                     if (response != null) {
                         response.close();
