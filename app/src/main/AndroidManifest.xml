@@ -3,6 +3,8 @@
     xmlns:tools="http://schemas.android.com/tools"
     package="com.moonveil.t9launch">
 
+    <uses-permission android:name="android.permission.INTERNET" />
+
     <queries>
         <intent>
             <action android:name="android.intent.action.MAIN" />

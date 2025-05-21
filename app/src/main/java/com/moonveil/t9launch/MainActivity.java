@@ -7,6 +7,7 @@ import android.os.Bundle;
 import android.text.Editable;
 import android.text.InputType;
 import android.text.TextWatcher;
+import android.util.Log;
 import android.view.View;
 import android.view.inputmethod.EditorInfo;
 import android.widget.GridLayout;
@@ -28,6 +29,8 @@ public class MainActivity extends AppCompatActivity {
     private AppListAdapter appListAdapter;
     private List<AppInfo> allApps;
     private AppLRUCache appLRUCache;
+    private WebdavService webdavService;
+    private static final String TAG = "MainActivity";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -35,6 +38,7 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
         appLRUCache = new AppLRUCache(this);
+        webdavService = new WebdavService(this);
         
         searchBox = findViewById(R.id.searchBox);
         MaterialCardView keypadCard = findViewById(R.id.keypadContainer);
@@ -119,8 +123,35 @@ public class MainActivity extends AppCompatActivity {
         super.onStart();
         // 加载应用列表
         loadAppList();
+        // 获取书签
+        fetchBookmarks(false); // false for not forcing refresh, use cache if available
 
         searchBox.setText("");
+    }
+
+    private void fetchBookmarks(boolean forceRefresh) {
+        webdavService.fetchAndParseBookmarks(forceRefresh, new WebdavService.BookmarksCallback() {
+            @Override
+            public void onSuccess(List<Bookmark> bookmarks) {
+                // Handle successful fetching of bookmarks
+                // For now, just log them
+                Log.i(TAG, "Successfully fetched " + bookmarks.size() + " bookmarks.");
+                for (Bookmark bookmark : bookmarks) {
+                    Log.d(TAG, "Bookmark: " + bookmark.getName() + " - " + bookmark.getUrl());
+                    // TODO: Integrate bookmarks into the app list or a separate list
+                }
+                // If you need to update UI, ensure it's on the main thread
+                // runOnUiThread(() -> { /* UI updates */ });
+            }
+
+            @Override
+            public void onFailure(Exception e) {
+                // Handle failure
+                Log.e(TAG, "Failed to fetch bookmarks: " + e.getMessage(), e);
+                // Optionally, show a toast or some other user feedback
+                // runOnUiThread(() -> Toast.makeText(MainActivity.this, "Failed to load bookmarks", Toast.LENGTH_SHORT).show());
+            }
+        });
     }
 
     private void loadAppList() {
