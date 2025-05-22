@@ -314,11 +314,6 @@ public class MainActivity extends AppCompatActivity {
         String currentText = searchBox.getText().toString();
         String buttonValue = buttonLabel;
 
-        // 如果按钮标签以设置图标结尾，则实际值是去除图标的部分
-        if (buttonLabel.endsWith(" ⚙")) {
-            buttonValue = buttonLabel.substring(0, buttonLabel.length() - " ⚙".length()).trim();
-        }
-
         // 处理特殊按键
         if (buttonValue.equals("*")) { // 使用 buttonValue 进行判断
             // 可以用作特殊功能键
