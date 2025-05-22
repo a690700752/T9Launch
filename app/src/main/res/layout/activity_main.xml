@@ -71,7 +71,7 @@
             <!-- T9 按键布局 -->
             <com.google.android.material.button.MaterialButton
                 style="@style/T9KeyButton"
-                android:text="1\n⚙" />
+                android:text="1(⚙)" />
             <com.google.android.material.button.MaterialButton
                 style="@style/T9KeyButton"
                 android:text="2\nABC" />
@@ -101,7 +101,7 @@
                 android:text="*" />
             <com.google.android.material.button.MaterialButton
                 style="@style/T9KeyButton"
-                android:text="0" />
+                android:text="0(🔖)" />
             <com.google.android.material.button.MaterialButton
                 style="@style/T9KeyButton"
                 android:text="⌫" />

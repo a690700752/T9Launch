@@ -13,6 +13,7 @@ import android.util.Log;
 import android.view.View;
 import android.view.inputmethod.EditorInfo;
 import android.widget.GridLayout;
+import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.GridLayoutManager;
@@ -109,8 +110,30 @@ public class MainActivity extends AppCompatActivity {
                         return true; // 表示事件已处理
                     });
                 }
+                // 为数字 "0" 键添加长按事件以切换书签搜索
+                if (button.getText().toString().startsWith("0")) {
+                    button.setOnLongClickListener(v -> {
+                        toggleBookmarkSearchSetting();
+                        return true; // 表示事件已处理
+                    });
+                }
             }
         }
+    }
+
+    private void toggleBookmarkSearchSetting() {
+        SharedPreferences settingsPrefs = getSharedPreferences(SettingsActivity.PREFS_SETTINGS_NAME, Context.MODE_PRIVATE);
+        boolean bookmarksEnabled = settingsPrefs.getBoolean(SettingsActivity.KEY_ENABLE_BOOKMARK_SEARCH, true);
+        SharedPreferences.Editor editor = settingsPrefs.edit();
+        editor.putBoolean(SettingsActivity.KEY_ENABLE_BOOKMARK_SEARCH, !bookmarksEnabled);
+        editor.apply();
+
+        // Refresh bookmarks based on the new setting
+        fetchBookmarks();
+
+        // Optionally, provide feedback to the user, e.g., via a Toast
+        String message = !bookmarksEnabled ? "Bookmark search enabled" : "Bookmark search disabled";
+        Toast.makeText(MainActivity.this, message, Toast.LENGTH_SHORT).show();
     }
 
     @Override
@@ -156,7 +179,7 @@ public class MainActivity extends AppCompatActivity {
                 runOnUiThread(() -> {
                     refreshCombinedListDisplay();
                     // Optionally, show a toast or some other user feedback
-                    // Toast.makeText(MainActivity.this, "Failed to load bookmarks", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(MainActivity.this, "Failed to load bookmarks", Toast.LENGTH_SHORT).show();
                 });
             }
         });
