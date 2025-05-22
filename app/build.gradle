@@ -5,6 +5,15 @@ plugins {
 android {
     compileSdk 33
 
+    signingConfigs {
+        release {
+            storeFile file("../../my_debug.jks")
+            storePassword "123456"
+            keyAlias "key0"
+            keyPassword "123456"
+        }
+    }
+
     defaultConfig {
         applicationId "com.moonveil.t9launch"
         minSdk 21
@@ -19,6 +28,10 @@ android {
         release {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+            signingConfig signingConfigs.release
+        }
+        debug {
+            signingConfig signingConfigs.release
         }
     }
     compileOptions {
