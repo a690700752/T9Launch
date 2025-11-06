@@ -179,7 +179,7 @@ public class MainActivity extends AppCompatActivity {
                 runOnUiThread(() -> {
                     refreshCombinedListDisplay();
                     // Optionally, show a toast or some other user feedback
-                    Toast.makeText(MainActivity.this, "Failed to load bookmarks", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(MainActivity.this, "Failed bookmarks: " + e.getMessage(), Toast.LENGTH_SHORT).show();
                 });
             }
         });
