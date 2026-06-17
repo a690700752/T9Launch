@@ -13,6 +13,7 @@ import android.widget.PopupMenu;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
+import androidx.recyclerview.widget.DiffUtil;
 import androidx.recyclerview.widget.RecyclerView;
 
 import java.util.ArrayList;
@@ -30,34 +31,21 @@ public class AppListAdapter extends RecyclerView.Adapter<AppListAdapter.ViewHold
     }
 
     public void setAppList(List<Object> newList) {
-        this.masterList = new ArrayList<>(newList); // Store the combined, sorted list
-        // Initial filter will be called by text watcher or explicitly
-        // For now, just apply the current filter (which might be empty)
-        // This will be handled by MainActivity calling filter() after setAppList or text change
-        // To ensure initial display is correct if searchBox is empty:
-        filter(getCurrentQuery()); // Assuming a method to get current query or pass it
-    }
-    
-    // Helper to get current query, replace with actual way if searchBox is accessible
-    // or ensure filter is called from MainActivity after setAppList
-    private String getCurrentQuery() {
-        // This is a placeholder. MainActivity should call filter.
-        // For example, if MainActivity.searchBox is available:
-        // return MainActivity.searchBox.getText().toString();
-        return ""; // Default to empty if not directly accessible
+        this.masterList = new ArrayList<>(newList);
+        // filter() will be called by the caller (MainActivity.refreshCombinedListDisplay) 
+        // after setAppList to avoid duplicate filtering
     }
 
 
     public void filter(String query) {
-        filteredList.clear();
-        List<Object> tempList = new ArrayList<>();
+        List<Object> newFilteredList = new ArrayList<>();
 
         List<Object> startsWithList = new ArrayList<>();
         List<Object> containsList = new ArrayList<>();
         List<Object> equalsList = new ArrayList<>();
 
         if (query.isEmpty()) {
-            tempList.addAll(masterList); // Use masterList for empty query
+            newFilteredList.addAll(masterList); // Use masterList for empty query
         } else {
             for (Object item : masterList) { // Iterate over masterList
                 String t9Key = null;
@@ -79,17 +67,23 @@ public class AppListAdapter extends RecyclerView.Adapter<AppListAdapter.ViewHold
             }
             // Order: Contains, then StartsWith, then Equals.
             // Adapter reverses this, so Equals will be at the bottom (highest priority).
-            tempList.addAll(containsList);
-            tempList.addAll(startsWithList);
-            tempList.addAll(equalsList);
+            newFilteredList.addAll(containsList);
+            newFilteredList.addAll(startsWithList);
+            newFilteredList.addAll(equalsList);
         }
         
-        // Reverse the tempList to achieve bottom-up display (newest/highest priority at bottom)
+        // Reverse the newFilteredList to achieve bottom-up display (newest/highest priority at bottom)
         // when used with RecyclerView's reverseLayout=true.
-        for (int i = tempList.size() - 1; i >= 0; i--) {
-            filteredList.add(tempList.get(i));
+        List<Object> reversedList = new ArrayList<>(newFilteredList.size());
+        for (int i = newFilteredList.size() - 1; i >= 0; i--) {
+            reversedList.add(newFilteredList.get(i));
         }
-        notifyDataSetChanged();
+
+        // 使用 DiffUtil 计算差异，仅更新变化的 item，避免 notifyDataSetChanged 导致的全量重建
+        DiffUtil.DiffResult diffResult = DiffUtil.calculateDiff(
+                new AppDiffCallback(filteredList, reversedList));
+        filteredList = reversedList;
+        diffResult.dispatchUpdatesTo(this);
     }
 
     @NonNull
@@ -175,6 +169,61 @@ public class AppListAdapter extends RecyclerView.Adapter<AppListAdapter.ViewHold
             super(itemView);
             appIcon = itemView.findViewById(R.id.appIcon);
             appName = itemView.findViewById(R.id.appName);
+        }
+    }
+
+    /**
+     * DiffUtil.Callback for efficient RecyclerView updates.
+     * Computes the minimal set of changes between old and new lists,
+     * allowing RecyclerView to animate only changed/moved/added/removed items.
+     */
+    private static class AppDiffCallback extends DiffUtil.Callback {
+        private final List<Object> oldList;
+        private final List<Object> newList;
+
+        AppDiffCallback(List<Object> oldList, List<Object> newList) {
+            this.oldList = oldList;
+            this.newList = newList;
+        }
+
+        @Override
+        public int getOldListSize() {
+            return oldList.size();
+        }
+
+        @Override
+        public int getNewListSize() {
+            return newList.size();
+        }
+
+        @Override
+        public boolean areItemsTheSame(int oldItemPosition, int newItemPosition) {
+            Object oldItem = oldList.get(oldItemPosition);
+            Object newItem = newList.get(newItemPosition);
+            if (oldItem instanceof AppInfo && newItem instanceof AppInfo) {
+                return ((AppInfo) oldItem).getPackageName().equals(((AppInfo) newItem).getPackageName());
+            } else if (oldItem instanceof Bookmark && newItem instanceof Bookmark) {
+                return ((Bookmark) oldItem).getUrl().equals(((Bookmark) newItem).getUrl());
+            }
+            return false;
+        }
+
+        @Override
+        public boolean areContentsTheSame(int oldItemPosition, int newItemPosition) {
+            Object oldItem = oldList.get(oldItemPosition);
+            Object newItem = newList.get(newItemPosition);
+            if (oldItem instanceof AppInfo && newItem instanceof AppInfo) {
+                AppInfo oldApp = (AppInfo) oldItem;
+                AppInfo newApp = (AppInfo) newItem;
+                return oldApp.getAppName().equals(newApp.getAppName())
+                        && oldApp.getPackageName().equals(newApp.getPackageName());
+            } else if (oldItem instanceof Bookmark && newItem instanceof Bookmark) {
+                Bookmark oldBm = (Bookmark) oldItem;
+                Bookmark newBm = (Bookmark) newItem;
+                return oldBm.getName().equals(newBm.getName())
+                        && oldBm.getUrl().equals(newBm.getUrl());
+            }
+            return false;
         }
     }
 } 

@@ -62,6 +62,9 @@ public class MainActivity extends AppCompatActivity {
             }
         });
         appList.setLayoutManager(layoutManager);
+        // RecyclerView 性能优化：固定尺寸避免重复测量，增大缓存池减少滚动时创建 View 的开销
+        appList.setHasFixedSize(true);
+        appList.setItemViewCacheSize(20);
         appListAdapter = new AppListAdapter(appLRUCache);
         appList.setAdapter(appListAdapter);
 
@@ -186,38 +189,39 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void loadAppList() {
-        PackageManager pm = getPackageManager();
-        Intent mainIntent = new Intent(Intent.ACTION_MAIN, null);
-        mainIntent.addCategory(Intent.CATEGORY_LAUNCHER);
+        // 将耗时的 Pinyin 转换和 Icon 加载移到后台线程，避免阻塞 UI 导致首次渲染掉帧
+        new Thread(() -> {
+            PackageManager pm = getPackageManager();
+            Intent mainIntent = new Intent(Intent.ACTION_MAIN, null);
+            mainIntent.addCategory(Intent.CATEGORY_LAUNCHER);
 
-        List<ResolveInfo> resolveInfos = pm.queryIntentActivities(mainIntent, 0);
-        allApps.clear();
+            List<ResolveInfo> resolveInfos = pm.queryIntentActivities(mainIntent, 0);
+            List<AppInfo> apps = new ArrayList<>();
 
-        for (ResolveInfo resolveInfo : resolveInfos) {
-            String appName = resolveInfo.loadLabel(pm).toString();
-            String packageName = resolveInfo.activityInfo.packageName;
+            for (ResolveInfo resolveInfo : resolveInfos) {
+                String appName = resolveInfo.loadLabel(pm).toString();
+                String packageName = resolveInfo.activityInfo.packageName;
 
-            // 过滤掉自己
-            if (packageName.equals("com.moonveil.t9launch")) {
-                continue;
+                // 过滤掉自己
+                if (packageName.equals("com.moonveil.t9launch")) {
+                    continue;
+                }
+
+                AppInfo appInfo = new AppInfo(
+                        appName,
+                        packageName,
+                        resolveInfo.loadIcon(pm)
+                );
+                apps.add(appInfo);
             }
 
-            AppInfo appInfo = new AppInfo(
-                    appName,
-                    packageName,
-                    resolveInfo.loadIcon(pm)
-            );
-            allApps.add(appInfo);
-        }
-
-        // Sorting will be done in refreshCombinedListDisplay for the combined list
-        
-        // As loadAppList can be called from onStart, ensure UI updates are on main thread
-        // if this method itself isn't guaranteed to be on UI thread (though loadAppList usually is).
-        // For safety, or if it were a background task:
-        // runOnUiThread(() -> refreshCombinedListDisplay());
-        // However, since onStart() and loadAppList() are on main thread, direct call is fine.
-        refreshCombinedListDisplay();
+            // 回到主线程更新 UI
+            runOnUiThread(() -> {
+                allApps.clear();
+                allApps.addAll(apps);
+                refreshCombinedListDisplay();
+            });
+        }).start();
     }
 
     // This method must be called on the UI thread if it triggers adapter changes.
