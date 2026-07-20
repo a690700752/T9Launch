@@ -30,6 +30,7 @@ import java.util.List;
 
 public class MainActivity extends AppCompatActivity {
     private TextInputEditText searchBox;
+    private RecyclerView appList;
     private AppListAdapter appListAdapter;
     private List<AppInfo> allApps = new ArrayList<>();
     private List<Bookmark> allBookmarks = new ArrayList<>();
@@ -48,7 +49,7 @@ public class MainActivity extends AppCompatActivity {
         searchBox = findViewById(R.id.searchBox);
         MaterialCardView keypadCard = findViewById(R.id.keypadContainer);
         GridLayout keypadGrid = (GridLayout) keypadCard.getChildAt(0);
-        RecyclerView appList = findViewById(R.id.appList);
+        appList = findViewById(R.id.appList);
 
         // 设置RecyclerView为网格布局
         int spanCount = 4; // 每行显示的应用数量
@@ -310,6 +311,12 @@ public class MainActivity extends AppCompatActivity {
             } else {
                 appListAdapter.filter(""); // Filter with empty string if searchBox is null
             }
+            // 数据刷新后滚动到开头，延迟执行确保布局完成
+            appList.postDelayed(() -> {
+                if (appListAdapter.getItemCount() > 0) {
+                    appList.scrollToPosition(0);
+                }
+            }, 250);
         }
     }
 
