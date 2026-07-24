@@ -6,6 +6,8 @@ import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
 import android.text.Editable;
 import android.text.InputType;
 import android.text.TextWatcher;
@@ -36,6 +38,8 @@ public class MainActivity extends AppCompatActivity {
     private List<Bookmark> allBookmarks = new ArrayList<>();
     private AppLRUCache appLRUCache;
     private WebdavService webdavService;
+    private Handler scrollDebounceHandler = new Handler(Looper.getMainLooper());
+    private Runnable scrollDebounceRunnable;
     private static final String TAG = "MainActivity";
 
     @Override
@@ -152,6 +156,7 @@ public class MainActivity extends AppCompatActivity {
         // Set text to empty to ensure a clean state and trigger initial filter correctly
         // after data might have been loaded.
         searchBox.setText("");
+        scheduleScrollDebounce();
     }
 
     private void fetchBookmarks() {
@@ -311,13 +316,23 @@ public class MainActivity extends AppCompatActivity {
             } else {
                 appListAdapter.filter(""); // Filter with empty string if searchBox is null
             }
-            // 数据刷新后滚动到开头，延迟执行确保布局完成
-            appList.postDelayed(() -> {
-                if (appListAdapter.getItemCount() > 0) {
-                    appList.scrollToPosition(0);
-                }
-            }, 250);
         }
+    }
+
+    /**
+     * 防抖滚动：每次输入时取消之前的滚动任务，延迟 300ms 后滚动到顶部。
+     */
+    private void scheduleScrollDebounce() {
+        if (scrollDebounceRunnable != null) {
+            scrollDebounceHandler.removeCallbacks(scrollDebounceRunnable);
+        }
+        scrollDebounceRunnable = () -> {
+            if (appListAdapter.getItemCount() > 0) {
+                // post 确保 RecyclerView 布局完成后才滚动
+                appList.post(() -> appList.scrollToPosition(0));
+            }
+        };
+        scrollDebounceHandler.postDelayed(scrollDebounceRunnable, 300);
     }
 
     private void onKeypadButtonClick(MaterialButton button) {
